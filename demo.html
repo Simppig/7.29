@@ -1,0 +1,293 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>字母小游戏</title>
+    <style type="text/css">
+        * {
+            margin: 0px;
+            padding: 0px;
+        }
+        
+        body {
+            background: url(img/bg3.jpg);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
+        
+        #bottom {
+            width: 100%;
+            height: 70px;
+            position: absolute;
+            bottom: 0px;
+            /* margin-left: 16%; */
+        }
+        
+        .botton {
+            margin-left: 50px;
+            width: 200px;
+            height: 70px;
+            background-image: url(img/startButton.jpg);
+            background-size: 197px 68px;
+            float: left;
+            text-align: center;
+            line-height: 70px;
+            cursor: pointer;
+        }
+        
+        #score {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            /* bottom: 0px;
+	right: 0px; 在右下角 */
+            left: 0px;
+            top: 0px;
+            /* 左上角 */
+            background-image: url(img/score2.jpg);
+            background-size: 200px 200px;
+            text-align: center;
+            line-height: 180px;
+            font-size: 40px;
+        }
+        
+        #time {
+            width: 100px;
+            height: 100px;
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            text-align: center;
+            line-height: 100px;
+            font-size: 30px;
+        }
+        
+        #info {
+            width: 500px;
+            height: 300px;
+            position: absolute;
+            left: 450px;
+            top: -60%;
+            background-image: url(img/restart4.jpg);
+            background-size: 500px 300px;
+            cursor: pointer;
+            text-align: center;
+            line-height: 60px;
+            color: blue;
+            font-size: 25px;
+            border-radius: 15px;
+        }
+    </style>
+    <script src="js/jquery.js"></script>
+    <script>
+        var arr = [];
+        var T = 0;
+        var score = 0;
+        var createId = 0;
+        var downId = 0;
+        var timeId = 0;
+        var time;
+        var downspeed;
+        var createspeed;
+        var scoreParam;
+
+        function start() {
+            //已经点击过了就不能再次点击,暂停以后才可以再次点击
+            if (T == 0) {
+                T++;
+                score = 0; //分数清0
+                time = 0; //时间清0
+                var grade = document.getElementById("score");
+                grade.innerHTML = score;
+                var timeMessage = document.getElementById("time");
+                timeMessage.innerHTML = time + "秒";
+                downspeed = 200;
+                createspeed = 1000;
+                /* 定时器：根据返回值清除定时器*/
+                timeId = setInterval("timeMessage()", 1000);
+                createId = setInterval("create()", createspeed); //创建
+
+                downId = setInterval("down()", downspeed); //降落速度
+                var info = document.getElementById("info");
+                info.style.top = "-60%";
+            }
+
+        }
+
+        function restart() { //点击提示图片继续
+            //已经点击过了就不能再次点击,暂停以后才可以再次点击
+            if (T == 0) {
+                T++;
+                time = 0;
+                downspeed = 200;
+                createspeed = 1000;
+                /* 定时器：根据返回值清除定时器*/
+                timeId = setInterval("timeMessage()", 1000);
+                createId = setInterval("create()", createspeed); //创建字母的速度
+                downId = setInterval("down()", downspeed); //降落速度
+                var info = document.getElementById("info");
+                info.style.top = "-60%";
+            }
+
+        }
+
+        function create() {
+            //创建一个图片对象
+            var img = document.createElement("img");
+            //生成A-Z的字母的随机数，也就是ASC码的65-90
+            var characterNum = Math.ceil(65 + Math.random() * 25); //向上取整		
+            //将unicode码转化为字母
+            var letter = String.fromCharCode(characterNum);
+            //生成图片
+            img.src = "img/" + letter + ".jpg";
+            img.name = letter;
+            img.style.position = "absolute"; //绝对定位
+            img.style.width = "50px"; //只设置宽度，高度自适应，防止图片失真
+            //生成一个随机数，是为了让图片出现的水平位置不同 大概1300个随机数
+            var left = Math.floor(Math.random() * 1300); //向下取整
+            img.style.left = left + "px";
+            img.style.top = "0px";
+            //将图片放到数组里
+            arr.push(img);
+            document.body.appendChild(img); //页面放入图片
+        }
+
+        function down() {
+            for (var i = 0; i < arr.length; i++) {
+                var letter = arr[i];
+                var top = letterPosition(letter.style.top);
+                var grade = document.getElementById("score");
+                if (top > 520) {
+                    //让图片从页面中消失
+                    letter.parentNode.removeChild(letter);
+                    //清除该字母在数组的存储
+                    arr.splice(i, 1);
+                    gameover();
+                    grade.innerHTML = score;
+                }
+                letter.style.top = top + 20 + "px";
+
+            }
+        }
+        //  获取字母距离顶部的高度
+        function letterPosition(top) { //传过来的top值为    5px
+            var h = top.substring(0, top.indexOf("p")); //截取数字，获取高度
+            return new Number(h); //数字格式化
+        }
+        //  暂停游戏
+        function pause() {
+            clearInterval(createId);
+            clearInterval(downId);
+            clearInterval(timeId);
+            var pause = document.getElementById("pau");
+            if (pause.innerHTML == "继续游戏") {
+                createId = setInterval("create()", createspeed);
+                downId = setInterval("down()", downspeed);
+                timeId = setInterval("timeMessage()", 1000);
+                pause.innerHTML = "暂停游戏";
+                var info = document.getElementById("info");
+                info.innerHTML = "休息会。。。";
+            } else {
+                pause.innerHTML = "继续游戏";
+            }
+
+        }
+        //当敲击键盘时触发该函数
+        window.onkeypress = function(e) {
+                //获得按下的键的code
+                var code = e.keyCode;
+                console.log(code);
+                var grade = document.getElementById("score");
+                var letter = String.fromCharCode(code).toUpperCase();
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].name == letter) {
+                        score++;
+                        scoreParam = score;
+                        changeSpeed();
+                        grade.innerHTML = score;
+                        arr[i].parentNode.removeChild(arr[i]);
+                        arr.splice(i, 1);
+                        break;
+                    }
+                }
+            }
+            //  游戏结束
+        function gameover() {
+            T--;
+            for (var i = 0; i < arr.length; i++) {
+                arr[i].parentNode.removeChild(arr[i]);
+            }
+            arr.splice(0, arr.length);
+            clearInterval(createId);
+            clearInterval(downId);
+            clearInterval(timeId);
+            var info = document.getElementById("info");
+            info.style.animation = "drop 2s linear";
+            info.style.top = "0px";
+            //info.innerHTML = time + "秒"		
+            var message = "就这样吧。。。"; //提示信息
+            if (score == 0) {
+                message = "发呆了。。"
+            } else if (0 < score && score < 10) {
+                message = "这么低哦";
+            } else if (10 <= score && score < 15) {
+                var msNum = Math.random() * 10; //1到10的随机整数
+                if (0 < msNum && msNum <= 3) {
+                    message = "加油，加油。。。";
+                } else if (3 < msNum && msNum <= 6) {
+                    message = "想什么呢，不好好玩！";
+                } else {
+                    message = "是不是走神了，分数有点低哦！";
+                }
+            } else {
+                message = "不错哦，敲键盘还是很快的嘛"
+            }
+            info.innerHTML = message;
+        }
+        //  计时
+        function timeMessage() {
+            time++;
+            var timeMessage = document.getElementById("time");
+            timeMessage.innerHTML = time + "秒";
+        }
+        //  根据分数，改变速度
+        function changeSpeed() {
+            if (scoreParam >= 5 && scoreParam < 10) { //当分数小于10大于5
+                downspeed = 150; //降落
+                createspeed = 800;
+                clearInterval(createId);
+                clearInterval(downId);
+                createId = setInterval("create()", createspeed);
+                downId = setInterval("down()", downspeed);
+            } else if (scoreParam >= 10 && scoreParam < 70) {
+                downspeed = 120;
+                createspeed = 700;
+                clearInterval(createId);
+                clearInterval(downId);
+                createId = setInterval("create()", createspeed);
+                downId = setInterval("down()", downspeed);
+            } else if (scoreParam >= 70) {
+                downspeed = 50;
+                createspeed = 200;
+                clearInterval(createId);
+                clearInterval(downId);
+                createId = setInterval("create()", createspeed);
+                downId = setInterval("down()", downspeed);
+            }
+
+        }
+    </script>
+</head>
+
+<body>
+    <div id="score">0</div>
+    <div id="bottom">
+        <div id="sta" class="botton" onclick="start()">开始游戏</div>
+        <div id="pau" class="botton" onclick="pause()">暂停游戏</div>
+    </div>
+    <div id="time">0秒</div>
+    <div id="info" onclick="restart()"></div>
+    <!-- 点击图片继续开始 -->
+</body>
+
+</html>
